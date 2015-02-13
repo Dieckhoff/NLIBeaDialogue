@@ -1,53 +1,104 @@
 import pdb
 
-# words:
-nouns = ["enrolment", "fee", "subject", "help", "issue", "information"]
-properNouns = ["www.upf.edu", "Anita"]
-verbs = ["can", "pay", "am", "need", "read"]
-pronouns = ["I", "you"]
-determiners = ["the", "that", "this"]
-adjectives = ["familiar"]
-adverbs = ["further", "not", "then"]
-conjunctions = ["if"]
-prepositions = ["with", "about", "on"]
+# classes:
+class PartOfSpeech(object):
+  name = ""
+  abbreviation = ""
+  elements = []
 
-# initialization:
-prepositionanlPhrase = []
-nominalPhrase = []
-adjectivePhrase = []
-verbalPhrase = []
-sentence = []
+class Phrase(object):
+  name = ""
+  abbreviation = ""
+  rules = []
 
-# rules:
-prepositionanlPhrase = [{"prep": prepositions, "NP": nominalPhrase}]
-nominalPhrase = [{"DET": determiners, "N": nouns}, {"DET": determiners, "NP": nominalPhrase}, {"N": nouns, "NP": nominalPhrase}, {"N": nouns}, {"ADV": adverbs, "NP": nominalPhrase}, {"P": pronouns}, {"PN": properNouns}]
-adjectivePhrase = [{"ADJP": adjectivePhrase, "PP": prepositionanlPhrase}, {"ADV": adverbs, "ADJP": adjectivePhrase}, {"ADJ": adjectives}, {"ADV": adverbs}]
-verbalPhrase = [{"P": pronouns, "VP": verbalPhrase}, {"V": verbs, "VP": verbalPhrase}, {"V": verbs}, {"VP": verbalPhrase, "ADJP": adjectivePhrase}, {"C": conjunctions, "VP": verbalPhrase}]
-sentence = [{"VP": verbalPhrase, "NP": nominalPhrase}, {"S": sentence, "S": sentence}]
-root = [{"S": sentence}]
+# Parts of Speech - Initialization of words:
+noun = PartOfSpeech()
+noun.name = "noun"
+noun.abbreviation = "N"
+noun.elements = ["enrolment", "fee", "subject", "help", "issue", "information"]
+
+properNoun = PartOfSpeech()
+properNoun.name = "proper noun"
+properNoun.abbreviation = "PN"
+properNoun.elements = ["www.upf.edu", "Anita"]
+
+verb = PartOfSpeech()
+verb.name = "verb"
+verb.abbreviation = "V"
+verb.elements = ["can", "pay", "am", "need", "read"]
+
+pronoun = PartOfSpeech()
+pronoun.name = "pronoun"
+pronoun.abbreviation = "P"
+pronoun.elements = ["I", "you"]
+
+determiner = PartOfSpeech()
+determiner.name = "determiner"
+determiner.abbreviation = "DET"
+determiner.elements = ["the", "that", "this"]
+
+adjective = PartOfSpeech()
+adjective.name = "adjective"
+adjective.abbreviation = "ADJ"
+adjective.elements = ["familiar"]
+
+adverb = PartOfSpeech()
+adverb.name = "adverb"
+adverb.abbreviation = "ADV"
+adverb.elements = ["further", "not", "then"]
+
+conjunction = PartOfSpeech()
+conjunction.name = "conjunction"
+conjunction.abbreviation = "C"
+conjunction.elements = ["if"]
+
+preposition = PartOfSpeech()
+preposition.name = "preposition"
+preposition.abbreviation = "PREP"
+preposition.elements = ["with", "about", "on"]
+
+# Phrases - Initialization of rules:
+prepositionalPhrase = Phrase()
+nominalPhrase = Phrase()
+adjectivePhrase = Phrase()
+verbalPhrase = Phrase()
+sentence = Phrase()
+
+prepositionalPhrase.name = "prepositional phrase"
+prepositionalPhrase.abbreviation = "PP"
+prepositionalPhrase.rules = [[preposition, nominalPhrase]]
+
+nominalPhrase.name = "nominal phrase"
+nominalPhrase.abbreviation = "NP"
+nominalPhrase.rules = [[determiner, noun], [determiner, nominalPhrase], [noun, nominalPhrase], [noun], [adverb, nominalPhrase], [pronoun], [properNoun]]
+
+adjectivePhrase.name = "adjective phrase"
+adjectivePhrase.abbreviation = "ADJP"
+adjectivePhrase.rules = [[adjectivePhrase, prepositionanlPhrase], [adverb, adjectivePhrase], [adjective], [adverb]]
+
+verbalPhrase.name = "verbal phrase"
+verbalPhrase.abbreviation = "VP"
+verbalPhrase.rules = [[pronoun, verbalPhrase], [verb, verbalPhrase], [verb], [verbalPhrase, adjectivePhrase], [conjunction, verbalPhrase]]
+
+sentence.name = "sentence"
+sentence.abbreviation = "S"
+sentence.rules = [[verbalPhrase, nominalPhrase], [sentence, sentence]]
+
+# root = [[sentence]]
 
 def earley(inputSentence):
-  # tree = sentence
   inputList = inputSentence.split( )
   for word in inputList:
-    # pdb.set_trace()
-    print predict(root, word)
+    predict(root, word)
 
 def predict(state, word):
   print "This is about: ", word
-  # pdb.set_trace()
   for option in state:
-    # pdb.set_trace()
-    # print option
     if type(option) != str:
-      # pdb.set_trace()
       for tag, tagList in option.iteritems():
-        # pdb.set_trace()
-        print tag
         if predict(tagList, word) == True:
           break
     elif scan(state, word) == True:
-      # pdb.set_trace()
       print "true! The word ", word, " is a: ", state
       return True
     else: return "not correct"
