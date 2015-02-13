@@ -14,6 +14,7 @@ class Phrase(object):
 class State(object, i):
   index = i
   rule = {"start": "", "end": ""}
+  word = ""
 
 class TreeChart(object):
   branches = []
@@ -27,7 +28,7 @@ noun.elements = ["enrolment", "fee", "subject", "help", "issue", "information"]
 properNoun = PartOfSpeech()
 properNoun.name = "proper noun"
 properNoun.abbreviation = "PN"
-properNoun.elements = ["www.upf.edu", "Anita"]
+properNoun.elements = ["www.upf.edu", "Bea"]
 
 verb = PartOfSpeech()
 verb.name = "verb"
@@ -91,34 +92,50 @@ sentence.name = "sentence"
 sentence.abbreviation = "S"
 sentence.rules = [[verbalPhrase, nominalPhrase], [sentence, sentence]]
 
-# root = [[sentence]]
+# preparation:
+inputSentence = "I am Bea"
+inputAsList = inputSentence.split( )
+output = earley(inputAsList)
+finalStartRule = {"start": "R", "end": "S"}
+if finalStartRule in output[-1]:
+  i = output.index(finalStartRule)
+  j = 0
+  b = [finalStartRule]
+  recursion(i, j, b, output)
+else:
+  print "Syntax Error!"
 
-tree = TreeChart()
+def parseText(inputAsList):
+  emptyStateSet = [finalStartRule]
+  for word, i in inputAsList:
+    newState = State(i+1)
+    emptyStateSet.append(newState)
+    possibleStateSet = addEarleyStates(emptyStateSet)
+  return possibleStateSet
 
-def earley(inputSentence):
-  inputAsList = inputSentence.split( )
-  tree.branches.append(sentence)
-  for word in inputAsList:
-    predict(tree, word)
+# def recursion(i, j, b, stateSet):
+#   # i: Index of current state set Qi
+#   # j: Index of current state bj in tree b
+#   while j > 0:
+#     # backwards-predictor:
 
-def predict(tree, word):
-  print "This is about: ", word
-  print "state: ", tree.branches.last().name
-  if hasattr(tree, "rules"):
-    for rule in tree.rules:
-      for el in rule:
-        if predict(el, word) == True:
-          return True
-        else: predict(el, word)
-  elif hasattr(tree, "elements"):
-    return scan(tree, word)
-  else: print "tree without elements..."
 
-def scan(partOfSpeech, word):
-  print "scanning: ", word, " in: ", partOfSpeech.name
-  return (word in partOfSpeech.elements)
+# def predict(tree, word):
+#   print "This is about: ", word
+#   print "state: ", tree.branches.last().name
+#   if hasattr(tree, "rules"):
+#     for rule in tree.rules:
+#       for el in rule:
+#         if predict(el, word) == True:
+#           return True
+#         else: predict(el, word)
+#   elif hasattr(tree, "elements"):
+#     return scan(tree, word)
+#   else: print "tree without elements..."
 
-# def complete():
-#   return
+# def scan(partOfSpeech, word):
+#   print "scanning: ", word, " in: ", partOfSpeech.name
+#   return (word in partOfSpeech.elements)
 
-earley("I am Anita")
+# # def complete():
+# #   return
