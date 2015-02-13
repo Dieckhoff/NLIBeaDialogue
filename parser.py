@@ -11,6 +11,13 @@ class Phrase(object):
   abbreviation = ""
   rules = []
 
+class State(object, i):
+  index = i
+  rule = {"start": "", "end": ""}
+
+class TreeChart(object):
+  branches = []
+
 # Parts of Speech - Initialization of words:
 noun = PartOfSpeech()
 noun.name = "noun"
@@ -74,7 +81,7 @@ nominalPhrase.rules = [[determiner, noun], [determiner, nominalPhrase], [noun, n
 
 adjectivePhrase.name = "adjective phrase"
 adjectivePhrase.abbreviation = "ADJP"
-adjectivePhrase.rules = [[adjectivePhrase, prepositionanlPhrase], [adverb, adjectivePhrase], [adjective], [adverb]]
+adjectivePhrase.rules = [[adjectivePhrase, prepositionalPhrase], [adverb, adjectivePhrase], [adjective], [adverb]]
 
 verbalPhrase.name = "verbal phrase"
 verbalPhrase.abbreviation = "VP"
@@ -86,26 +93,30 @@ sentence.rules = [[verbalPhrase, nominalPhrase], [sentence, sentence]]
 
 # root = [[sentence]]
 
-def earley(inputSentence):
-  inputList = inputSentence.split( )
-  for word in inputList:
-    predict(root, word)
+tree = TreeChart()
 
-def predict(state, word):
+def earley(inputSentence):
+  inputAsList = inputSentence.split( )
+  tree.branches.append(sentence)
+  for word in inputAsList:
+    predict(tree, word)
+
+def predict(tree, word):
   print "This is about: ", word
-  for option in state:
-    if type(option) != str:
-      for tag, tagList in option.iteritems():
-        if predict(tagList, word) == True:
-          break
-    elif scan(state, word) == True:
-      print "true! The word ", word, " is a: ", state
-      return True
-    else: return "not correct"
+  print "state: ", tree.branches.last().name
+  if hasattr(tree, "rules"):
+    for rule in tree.rules:
+      for el in rule:
+        if predict(el, word) == True:
+          return True
+        else: predict(el, word)
+  elif hasattr(tree, "elements"):
+    return scan(tree, word)
+  else: print "tree without elements..."
 
 def scan(partOfSpeech, word):
-  print "scanning"
-  return (word in partOfSpeech)
+  print "scanning: ", word, " in: ", partOfSpeech.name
+  return (word in partOfSpeech.elements)
 
 # def complete():
 #   return
