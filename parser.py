@@ -91,10 +91,17 @@ sentence.name = "sentence"
 sentence.abbreviation = "S"
 sentence.rules = ["VP NP", "S S"]
 
+# sentence.rules = ["NP VP"]
+# nominalPhrase.rules = ["P"]
+# verbalPhrase.rules = ["V PN"]
+
 # other global variables:
 allPhrases = [prepositionalPhrase, nominalPhrase, adjectivePhrase, verbalPhrase, sentence]
 allTerminals = [noun, verb, preposition, conjunction, determiner, adjective, adverb, pronoun, properNoun]
 globalStateSet = []
+placeholderstate = State()
+placeholderstate.rule = {"start": "*", "end": "@*"}
+placeholderstate.index = [0, 0]
 
 def earley(words):
   chart = []
@@ -103,11 +110,14 @@ def earley(words):
   initialState.index = [0, 0]
   addtochart(initialState, 0)
   for i, word in enumerate(words):
+    if len(globalStateSet) <= i:
+      addtochart(placeholderstate, i)
     for j, state in enumerate(globalStateSet[i]):
-      if ("@" in state.rule["end"]) and not isTerminal(afterDot(state.rule["end"])) and not afterDot(state.rule["end"]) == "":
+      # print "state rule: ", state.rule["start"], "-->", state.rule["end"], i, word, j
+      if not isTerminal(afterDot(state.rule["end"])) and not afterDot(state.rule["end"]) == "":
         print "predicting: ", state.rule["start"], "-->", state.rule["end"]
         predictor(state)
-      elif ("@" in state.rule["end"]) and isTerminal(afterDot(state.rule["end"])):
+      elif isTerminal(afterDot(state.rule["end"])):
         print "scanning: ", state.rule["start"], "-->", state.rule["end"]
         scanner(state, word)
       else:
@@ -128,10 +138,11 @@ def predictor(state):
 def scanner(state, word):
   currentSentenceIndex = state.index[-1] # second index
   scanned = afterDot(state.rule["end"])
-  scannedTerminal = [terminal for terminal in allTerminals if terminal.abbreviation == scanned]
-  if word in scannedTerminal:
+  scannedTerminal = [terminal for terminal in allTerminals if terminal.abbreviation == scanned][0]
+  if word in scannedTerminal.elements:
+    print word, " is a ", scannedTerminal.name, "\n"
     newState = State()
-    newState.rule = {"start": scanned, "end": (word, "@")}
+    newState.rule = {"start": scanned, "end": "".join([word, "@"])}
     newState.index = [currentSentenceIndex, currentSentenceIndex+1]
     addtochart(newState, currentSentenceIndex+1)
 
@@ -144,8 +155,9 @@ def completer(state):
   relevantStates = [state for state in currentChartPart if (state.index[-1] == j) and (afterDot(state.rule["end"]) == start)]
   for state in relevantStates:
     # shifting the dot one further:
-    before = state.rule["end"].split("@")[0]
-    after = state.rule["end"].split("@")[-1][1:]
+    splitted = state.rule["end"].split("@")
+    before = splitted[0]
+    after = splitted[-1]
     x = after.split( )
     x.insert(1, "@")
     newAfter = "".join(x)
@@ -159,6 +171,8 @@ def completer(state):
 def addtochart(state, index):
   if len(globalStateSet) <= index:
     globalStateSet.append([state])
+  elif globalStateSet[index] == [placeholderstate]:
+    globalStateSet[index] = [state]
   elif state not in globalStateSet[index]:
     globalStateSet[-1].append(state)
 
@@ -182,8 +196,11 @@ def isTerminal(symbol):
   return x
 
 def printChart():
-  print globalStateSet
+  print "\nHere is the chart:\n_____________________\n"
+  for x in globalStateSet:
+    for y in x:
+      print y.index, " ", y.rule["start"], " --> ", y.rule["end"]
 
-inputSentence = "I am Bea"
+inputSentence = "Then you can pay the enrolment fee"
 inputSentenceAsList = inputSentence.split( )
 earley(inputSentenceAsList)
