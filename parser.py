@@ -107,7 +107,7 @@ def earley(words):
       if ("@" in state.rule["end"]) and not isTerminal(afterDot(state.rule["end"])) and not afterDot(state.rule["end"]) == "":
         print "predicting: ", state.rule["start"], "-->", state.rule["end"]
         predictor(state)
-      elif ("@" in state.rule["end"]) and isTerminal(state.rule["end"]):
+      elif ("@" in state.rule["end"]) and isTerminal(afterDot(state.rule["end"])):
         print "scanning: ", state.rule["start"], "-->", state.rule["end"]
         scanner(state, word)
       else:
@@ -117,7 +117,6 @@ def earley(words):
 
 def predictor(state):
   predicted = afterDot(state.rule["end"])
-  print "predicted: ", predicted
   predictedPhrase = [phrase for phrase in allPhrases if phrase.abbreviation == predicted][0]
   currentChartIndex = state.index[-1] # second index
   for end in predictedPhrase.rules:
@@ -156,7 +155,6 @@ def completer(state):
     newState.rule = {"start": state.rule["start"], "end": newEnd}
     newState.index = [state.index[0], k]
     addtochart(newState, k)
-    # print "shifting. before: ", before, " after: ", after, " newAfter: ", newAfter, " newEnd: ", newEnd
 
 def addtochart(state, index):
   if len(globalStateSet) <= index:
@@ -169,17 +167,19 @@ def incomplete(state):
 
 def afterDot(state):
   # @ symbolizes the dot
-  # print "in afterdot function. ", state
   x = state.split("@")[-1]
   if x != "":
     y = x.split( )[0]
     if y != "@":
       return y # return the first symbol after the dot
+    else:
+      return ""
   else:
     return ""
 
 def isTerminal(symbol):
-  return (symbol in [t.abbreviation for t in allTerminals])
+  x = (symbol in [t.abbreviation for t in allTerminals])
+  return x
 
 def printChart():
   print globalStateSet
@@ -187,51 +187,3 @@ def printChart():
 inputSentence = "I am Bea"
 inputSentenceAsList = inputSentence.split( )
 earley(inputSentenceAsList)
-
-# # preparation:
-# inputSentence = "I am Bea"
-# inputAsList = inputSentence.split( )
-# output = earley(inputAsList)
-# finalStartRule = {"start": "R", "end": "S"}
-# if finalStartRule in output[-1]:
-#   i = output.index(finalStartRule)
-#   j = 0
-#   b = [finalStartRule]
-#   recursion(i, j, b, output)
-# else:
-#   print "Syntax Error!"
-
-# def parseText(inputAsList):
-#   emptyStateSet = [finalStartRule]
-#   for word, i in inputAsList:
-#     newState = State(i+1)
-#     emptyStateSet.append(newState)
-#     possibleStateSet = addEarleyStates(emptyStateSet)
-#   return possibleStateSet
-
-# def recursion(i, j, b, stateSet):
-#   # i: Index of current state set Qi
-#   # j: Index of current state bj in tree b
-#   while j > 0:
-#     # backwards-predictor:
-
-
-# def predict(tree, word):
-#   print "This is about: ", word
-#   print "state: ", tree.branches.last().name
-#   if hasattr(tree, "rules"):
-#     for rule in tree.rules:
-#       for el in rule:
-#         if predict(el, word) == True:
-#           return True
-#         else: predict(el, word)
-#   elif hasattr(tree, "elements"):
-#     return scan(tree, word)
-#   else: print "tree without elements..."
-
-# def scan(partOfSpeech, word):
-#   print "scanning: ", word, " in: ", partOfSpeech.name
-#   return (word in partOfSpeech.elements)
-
-# # def complete():
-# #   return
