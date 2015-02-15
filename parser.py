@@ -11,10 +11,9 @@ class Phrase(object):
   abbreviation = ""
   rules = []
 
-class State(object, i):
-  index = i
-  rule = {"start": "", "end": ""}
-  word = ""
+class State(object):
+  rule = {}
+  index = []
 
 class TreeChart(object):
   branches = []
@@ -74,44 +73,141 @@ sentence = Phrase()
 
 prepositionalPhrase.name = "prepositional phrase"
 prepositionalPhrase.abbreviation = "PP"
-prepositionalPhrase.rules = [[preposition, nominalPhrase]]
+prepositionalPhrase.rules = ["PREP NP"]
 
 nominalPhrase.name = "nominal phrase"
 nominalPhrase.abbreviation = "NP"
-nominalPhrase.rules = [[determiner, noun], [determiner, nominalPhrase], [noun, nominalPhrase], [noun], [adverb, nominalPhrase], [pronoun], [properNoun]]
+nominalPhrase.rules = ["DET N", "DET NP", "N NP", "N", "ADV NP", "P", "PN"]
 
 adjectivePhrase.name = "adjective phrase"
 adjectivePhrase.abbreviation = "ADJP"
-adjectivePhrase.rules = [[adjectivePhrase, prepositionalPhrase], [adverb, adjectivePhrase], [adjective], [adverb]]
+adjectivePhrase.rules = ["ADJP PP", "ADV ADJP", "ADJ", "ADV"]
 
 verbalPhrase.name = "verbal phrase"
 verbalPhrase.abbreviation = "VP"
-verbalPhrase.rules = [[pronoun, verbalPhrase], [verb, verbalPhrase], [verb], [verbalPhrase, adjectivePhrase], [conjunction, verbalPhrase]]
+verbalPhrase.rules = ["P VP", "V VP", "V", "VP ADJP", "C VP"]
 
 sentence.name = "sentence"
 sentence.abbreviation = "S"
-sentence.rules = [[verbalPhrase, nominalPhrase], [sentence, sentence]]
+sentence.rules = ["VP NP", "S S"]
 
-# preparation:
+# other global variables:
+allPhrases = [prepositionalPhrase, nominalPhrase, adjectivePhrase, verbalPhrase, sentence]
+allTerminals = [noun, verb, preposition, conjunction, determiner, adjective, adverb, pronoun, properNoun]
+globalStateSet = []
+
+def earley(words):
+  chart = []
+  initialState = State()
+  initialState.rule = {"start": "$", "end": "@S"}
+  initialState.index = [0, 0]
+  addtochart(initialState, 0)
+  for i, word in enumerate(words):
+    for j, state in enumerate(globalStateSet[i]):
+      if ("@" in state.rule["end"]) and not isTerminal(afterDot(state.rule["end"])) and not afterDot(state.rule["end"]) == "":
+        print "predicting: ", state.rule["start"], "-->", state.rule["end"]
+        predictor(state)
+      elif ("@" in state.rule["end"]) and isTerminal(state.rule["end"]):
+        print "scanning: ", state.rule["start"], "-->", state.rule["end"]
+        scanner(state, word)
+      else:
+        print "completing: ", state.rule["start"], "-->", state.rule["end"]
+        completer(state) # dot is at the end of rule's right hand side
+  printChart()
+
+def predictor(state):
+  predicted = afterDot(state.rule["end"])
+  print "predicted: ", predicted
+  predictedPhrase = [phrase for phrase in allPhrases if phrase.abbreviation == predicted][0]
+  currentChartIndex = state.index[-1] # second index
+  for end in predictedPhrase.rules:
+    newState = State()
+    newState.rule = {"start": predicted, "end": "".join(["@", end])}
+    newState.index = [currentChartIndex, currentChartIndex]
+    addtochart(newState, currentChartIndex)
+
+def scanner(state, word):
+  currentSentenceIndex = state.index[-1] # second index
+  scanned = afterDot(state.rule["end"])
+  scannedTerminal = [terminal for terminal in allTerminals if terminal.abbreviation == scanned]
+  if word in scannedTerminal:
+    newState = State()
+    newState.rule = {"start": scanned, "end": (word, "@")}
+    newState.index = [currentSentenceIndex, currentSentenceIndex+1]
+    addtochart(newState, currentSentenceIndex+1)
+
+def completer(state):
+  start = state.rule["start"]
+  end = state.rule["end"]
+  j = state.index[0]
+  k = state.index[-1]
+  currentChartPart = globalStateSet[j]
+  relevantStates = [state for state in currentChartPart if (state.index[-1] == j) and (afterDot(state.rule["end"]) == start)]
+  for state in relevantStates:
+    # shifting the dot one further:
+    before = state.rule["end"].split("@")[0]
+    after = state.rule["end"].split("@")[-1][1:]
+    x = after.split( )
+    x.insert(1, "@")
+    newAfter = "".join(x)
+    newEnd = "".join([before, newAfter])
+    # adding new state to chart:
+    newState = State()
+    newState.rule = {"start": state.rule["start"], "end": newEnd}
+    newState.index = [state.index[0], k]
+    addtochart(newState, k)
+    # print "shifting. before: ", before, " after: ", after, " newAfter: ", newAfter, " newEnd: ", newEnd
+
+def addtochart(state, index):
+  if len(globalStateSet) <= index:
+    globalStateSet.append([state])
+  elif state not in globalStateSet[index]:
+    globalStateSet[-1].append(state)
+
+def incomplete(state):
+  return (afterDot(state.rule["end"]) != "") # True if there is a symbol after the dot
+
+def afterDot(state):
+  # @ symbolizes the dot
+  # print "in afterdot function. ", state
+  x = state.split("@")[-1]
+  if x != "":
+    y = x.split( )[0]
+    if y != "@":
+      return y # return the first symbol after the dot
+  else:
+    return ""
+
+def isTerminal(symbol):
+  return (symbol in [t.abbreviation for t in allTerminals])
+
+def printChart():
+  print globalStateSet
+
 inputSentence = "I am Bea"
-inputAsList = inputSentence.split( )
-output = earley(inputAsList)
-finalStartRule = {"start": "R", "end": "S"}
-if finalStartRule in output[-1]:
-  i = output.index(finalStartRule)
-  j = 0
-  b = [finalStartRule]
-  recursion(i, j, b, output)
-else:
-  print "Syntax Error!"
+inputSentenceAsList = inputSentence.split( )
+earley(inputSentenceAsList)
 
-def parseText(inputAsList):
-  emptyStateSet = [finalStartRule]
-  for word, i in inputAsList:
-    newState = State(i+1)
-    emptyStateSet.append(newState)
-    possibleStateSet = addEarleyStates(emptyStateSet)
-  return possibleStateSet
+# # preparation:
+# inputSentence = "I am Bea"
+# inputAsList = inputSentence.split( )
+# output = earley(inputAsList)
+# finalStartRule = {"start": "R", "end": "S"}
+# if finalStartRule in output[-1]:
+#   i = output.index(finalStartRule)
+#   j = 0
+#   b = [finalStartRule]
+#   recursion(i, j, b, output)
+# else:
+#   print "Syntax Error!"
+
+# def parseText(inputAsList):
+#   emptyStateSet = [finalStartRule]
+#   for word, i in inputAsList:
+#     newState = State(i+1)
+#     emptyStateSet.append(newState)
+#     possibleStateSet = addEarleyStates(emptyStateSet)
+#   return possibleStateSet
 
 # def recursion(i, j, b, stateSet):
 #   # i: Index of current state set Qi
