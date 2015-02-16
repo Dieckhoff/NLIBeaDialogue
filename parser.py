@@ -192,6 +192,6 @@ def printChart():
     for y in x:
       print y.index, " ", y.rule["start"], " --> ", y.rule["end"]
 
-inputSentence = "I am not familiar with that subject"
+inputSentence = input("Which sentence should I parse? ")
 inputSentenceAsList = inputSentence.split( )
 earley(inputSentenceAsList)
