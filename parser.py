@@ -52,7 +52,7 @@ adjective.elements = ["familiar"]
 adverb = PartOfSpeech()
 adverb.name = "adverb"
 adverb.abbreviation = "ADV"
-adverb.elements = ["further", "not"]
+adverb.elements = ["further", "Please"]
 
 preposition = PartOfSpeech()
 preposition.name = "preposition"
@@ -72,15 +72,15 @@ prepositionalPhrase.rules = ["PREP NP"]
 
 nominalPhrase.name = "nominal phrase"
 nominalPhrase.abbreviation = "NP"
-nominalPhrase.rules = ["DET N", "ADV N", "P", "PN"]
+nominalPhrase.rules = ["DET N", "ADJP PP", "ADV N", "P", "PN"]
 
 adjectivePhrase.name = "adjective phrase"
 adjectivePhrase.abbreviation = "ADJP"
-adjectivePhrase.rules = ["ADJ PP", "ADV ADJ", "ADV"]
+adjectivePhrase.rules = ["ADJ PP", "ADV ADJ", "ADV", "ADV N"]
 
 verbalPhrase.name = "verbal phrase"
 verbalPhrase.abbreviation = "VP"
-verbalPhrase.rules = ["P VP", "V VP", "V", "VP ADJP", "V NP"]
+verbalPhrase.rules = ["P V", "V V ADJP", "V", "V ADJP", "V NP", "ADV V"]
 
 sentence.name = "sentence"
 sentence.abbreviation = "S"
@@ -118,7 +118,11 @@ def earley(words):
 
 def predictor(state):
   predicted = afterDot(state.rule["end"])
-  predictedPhrase = [phrase for phrase in allPhrases if phrase.abbreviation == predicted][0]
+  predictedPhraseList = [phrase for phrase in allPhrases if phrase.abbreviation == predicted]
+  if len(predictedPhraseList) > 0:
+    predictedPhrase = predictedPhraseList[0]
+  else:
+    return
   currentChartIndex = state.index[-1] # second index
   for end in predictedPhrase.rules:
     newState = State()
