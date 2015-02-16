@@ -22,7 +22,7 @@ class TreeChart(object):
 noun = PartOfSpeech()
 noun.name = "noun"
 noun.abbreviation = "N"
-noun.elements = ["enrolment", "fee", "subject", "help", "issue", "information"]
+noun.elements = ["subject", "information"]
 
 properNoun = PartOfSpeech()
 properNoun.name = "proper noun"
@@ -32,7 +32,7 @@ properNoun.elements = ["www.upf.edu", "Bea"]
 verb = PartOfSpeech()
 verb.name = "verb"
 verb.abbreviation = "V"
-verb.elements = ["can", "pay", "am", "need", "read"]
+verb.elements = ["can", "am", "read"]
 
 pronoun = PartOfSpeech()
 pronoun.name = "pronoun"
@@ -42,7 +42,7 @@ pronoun.elements = ["I", "you"]
 determiner = PartOfSpeech()
 determiner.name = "determiner"
 determiner.abbreviation = "DET"
-determiner.elements = ["the", "that", "this"]
+determiner.elements = ["that"]
 
 adjective = PartOfSpeech()
 adjective.name = "adjective"
@@ -52,17 +52,12 @@ adjective.elements = ["familiar"]
 adverb = PartOfSpeech()
 adverb.name = "adverb"
 adverb.abbreviation = "ADV"
-adverb.elements = ["further", "not", "then"]
-
-conjunction = PartOfSpeech()
-conjunction.name = "conjunction"
-conjunction.abbreviation = "C"
-conjunction.elements = ["if"]
+adverb.elements = ["further", "not"]
 
 preposition = PartOfSpeech()
 preposition.name = "preposition"
 preposition.abbreviation = "PREP"
-preposition.elements = ["with", "about", "on"]
+preposition.elements = ["with", "on"]
 
 # Phrases - Initialization of rules:
 prepositionalPhrase = Phrase()
@@ -77,27 +72,23 @@ prepositionalPhrase.rules = ["PREP NP"]
 
 nominalPhrase.name = "nominal phrase"
 nominalPhrase.abbreviation = "NP"
-nominalPhrase.rules = ["DET N", "DET NP", "N NP", "N", "ADV NP", "P", "PN"]
+nominalPhrase.rules = ["DET N", "ADV N", "P", "PN"]
 
 adjectivePhrase.name = "adjective phrase"
 adjectivePhrase.abbreviation = "ADJP"
-adjectivePhrase.rules = ["ADJP PP", "ADV ADJP", "ADJ", "ADV"]
+adjectivePhrase.rules = ["ADJ PP", "ADV ADJ", "ADV"]
 
 verbalPhrase.name = "verbal phrase"
 verbalPhrase.abbreviation = "VP"
-verbalPhrase.rules = ["P VP", "V VP", "V", "VP ADJP", "C VP"]
+verbalPhrase.rules = ["P VP", "V VP", "V", "VP ADJP", "V NP"]
 
 sentence.name = "sentence"
 sentence.abbreviation = "S"
-sentence.rules = ["VP NP", "S S"]
-
-# sentence.rules = ["NP VP"]
-# nominalPhrase.rules = ["P"]
-# verbalPhrase.rules = ["V PN"]
+sentence.rules = ["VP NP"]
 
 # other global variables:
 allPhrases = [prepositionalPhrase, nominalPhrase, adjectivePhrase, verbalPhrase, sentence]
-allTerminals = [noun, verb, preposition, conjunction, determiner, adjective, adverb, pronoun, properNoun]
+allTerminals = [noun, verb, preposition, determiner, adjective, adverb, pronoun, properNoun]
 globalStateSet = []
 placeholderstate = State()
 placeholderstate.rule = {"start": "*", "end": "@*"}
@@ -201,6 +192,6 @@ def printChart():
     for y in x:
       print y.index, " ", y.rule["start"], " --> ", y.rule["end"]
 
-inputSentence = "Then you can pay the enrolment fee"
+inputSentence = "I am not familiar with that subject"
 inputSentenceAsList = inputSentence.split( )
 earley(inputSentenceAsList)
