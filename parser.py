@@ -72,15 +72,15 @@ prepositionalPhrase.rules = ["PREP NP"]
 
 nominalPhrase.name = "nominal phrase"
 nominalPhrase.abbreviation = "NP"
-nominalPhrase.rules = ["DET N", "ADJP PP", "ADV N", "P", "PN"]
+nominalPhrase.rules = ["PN", "P", "DET N", "ADJP PP"]
 
 adjectivePhrase.name = "adjective phrase"
 adjectivePhrase.abbreviation = "ADJP"
-adjectivePhrase.rules = ["ADJ PP", "ADV ADJ", "ADV", "ADV N"]
+adjectivePhrase.rules = ["ADJ", "ADV N"]
 
 verbalPhrase.name = "verbal phrase"
 verbalPhrase.abbreviation = "VP"
-verbalPhrase.rules = ["P V", "V V ADJP", "V", "V ADJP", "V NP", "ADV V"]
+verbalPhrase.rules = ["P V", "ADV V"]
 
 sentence.name = "sentence"
 sentence.abbreviation = "S"
@@ -126,7 +126,7 @@ def predictor(state):
   currentChartIndex = state.index[-1] # second index
   for end in predictedPhrase.rules:
     newState = State()
-    newState.rule = {"start": predicted, "end": "".join(["@", end])}
+    newState.rule = {"start": predicted, "end": " ".join(["@", end])}
     newState.index = [currentChartIndex, currentChartIndex]
     addtochart(newState, currentChartIndex)
 
@@ -137,7 +137,7 @@ def scanner(state, word):
   if word in scannedTerminal.elements:
     print word, " is a ", scannedTerminal.name, "\n"
     newState = State()
-    newState.rule = {"start": scanned, "end": "".join([word, "@"])}
+    newState.rule = {"start": scanned, "end": " ".join([word, "@"])}
     newState.index = [currentSentenceIndex, currentSentenceIndex+1]
     addtochart(newState, currentSentenceIndex+1)
 
@@ -155,8 +155,8 @@ def completer(state):
     after = splitted[-1]
     x = after.split( )
     x.insert(1, "@")
-    newAfter = "".join(x)
-    newEnd = "".join([before, newAfter])
+    newAfter = " ".join(x)
+    newEnd = " ".join([before, newAfter])
     # adding new state to chart:
     newState = State()
     newState.rule = {"start": state.rule["start"], "end": newEnd}
